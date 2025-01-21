@@ -2,9 +2,9 @@
 
 <p style="text-align: center;">Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)</p>
 
-<p style="text-align: center;">Revision 2.0</p>
+<p style="text-align: center;">Revision 1.0</p>
 
-<p style="text-align: center;">Version 0.5</p>
+<p style="text-align: center;">Version 1.0</p>
 
 <div style="page-break-after: always"></div>
 
@@ -34,21 +34,19 @@ To drive agility of specification definition and to maximize applicability, the 
 
 Enhancements and advanced use cases and applications are outside the scope of this specification and may be developed in the form of a roadmap for the Silicon RoT and community engagement.
 
-Caliptra 2.0 defines a design standard for a Silicon internal RoT baseline. This standard satisfies a Root of Trust for Measurement (RTM) and cryptographic services for the SoC. The SoC must measure the code and configuration it boots into Caliptra in this configuration. Caliptra must store these measurements and report them with signed attestations rooted in unique per-asset cryptographic entropy. As such, Caliptra serves as a Root of Trust for Identity (RTI) for the SoC.
+Caliptra defines a design standard for a Silicon internal RoT baseline. This standard satisfies a Root of Trust for Measurement (RTM) role. The open-source implementation of Caliptra drives transparency into the RTM and measurement mechanism that anchor hardware attestation. The SoC must measure the code and configuration it boots into Caliptra. Caliptra must store these measurements and report them with signed attestations rooted in unique per-asset cryptographic entropy. As such, Caliptra serves as a Root of Trust for Identity (RTI) for the SoC.
 
-The Caliptra Subsystem further standardizes SoC protection mechanisms with Root of Trust for Update (RTU) and Root of Trust for Recovery (RTRec). The open-source implementation of Caliptra drives transparency and consistency into the root of trust mechanisms that anchor foundational security services for the SoC.
+To satisfy these Silicon RoT goals, no other capabilities are part of this specification. This scope decouples platform integrity capabilities that can be enforced and evolve independently through other platform devices or services – such as update, protection, and recovery.
 
-Within this scope, the goals for a Caliptra 2.0 specification with subsystem include:
+Within this scope, the goals for a Caliptra 1.0 specification include:
 
 * Definition and design of the standard silicon internal RoT baseline:
   * Reference functional specification:
-    * Scope including RTM, RTU and RTRec capabilities
+    * Scope including RTM and RTI capabilities
     * Control over SoC non-volatile state, including per asset entropy
   * Reference APIs:
     * Attestation APIs
-    * Authentication APIs
-    * Recovery APIs
-    * Internal SoC Cryptographic services
+    * Internal SoC services
   * Reference implementation
   * Open source reference (including RTL and firmware reference code):
     * For implementation consistency, using open source dynamics to avoid pitfalls and common mistakes
@@ -61,8 +59,8 @@ Within this scope, the goals for a Caliptra 2.0 specification with subsystem inc
   * Critical priority are devices with the ability to handle user plain text data
     * Top priority are CPU SoCs
     * Other examples include SmartNIC and accelerators
-  * 2.0 scope includes further datacenter devices such as
-    * SSD, HDD, BMC, DIMM, PSU, CPLD etc.
+  * Over time, the scope includes further datacenter devices
+    * SSD, HDD, BMC, DIMM
 
 Note that Caliptra reference code (including RTL and firmware) is intended to be adopted as-is, without modification.
 
@@ -87,7 +85,7 @@ In this version of the specification, the desired capabilities address the basic
 
 ### DICE Protection Environment
 
-Caliptra implements the DICE Protection Environment (DPE) API, allowing it to derive and wield a DICE identity on behalf of other elements within the SoC. Use cases for this API include serving as a signing oracle for a Security Protocol and Data Model (SPDM) responder that is executing in a SoC application processor (in passive mode) or in the Manufacturer Control Unit (MCU in subsystem mode), as well as authentication to a discrete TPM device.
+Caliptra implements the DICE Protection Environment (DPE) API, allowing it to derive and wield a DICE identity on behalf of other elements within the SoC. Use cases for this API include serving as a signing oracle for a Security Protocol and Data Model (SPDM) responder that is executing in the SoC application processor, as well as authentication to a discrete TPM device.
 
 # Industry standards and specifications
 
@@ -103,18 +101,17 @@ Per [Reference 1](#ref-1), RoT subsystems are required to fulfill three principl
 
 These RoT services can be hosted by a complex RoT as a whole or these services can be spread across one or more components within a platform. This determination has a basis in physical risk. Physical adversaries with reasonable skill can bypass a discrete RoT’s detection capabilities, for example, with SPI interposers.
 
-However, a RoT embedded within a SoC or ASIC represents a much higher detection bar for a physical adversary to defeat. For this reason in Caliptra 2.0 Core, the cryptographic module shall deliver the **Detection** capability for itself while providing **Measurement** and **Identity** services for the rest of the SoC. The **Measurement** and **Identity** services that Caliptra provides can be used by the SoC to create **Detection** capability for the measured firmware and configuration data.
+However, an RoT embedded within a SoC or ASIC represents a much higher detection bar for a physical adversary to defeat. For this reason, Caliptra shall deliver the **Detection** capability for itself while providing **Measurement** and **Identity** services for the rest of the SoC. The **Measurement** and **Identity** services that Caliptra provides can be used by the SoC to create **Detection** capability for the measured firmware and configuration data.
 
-The objectives of Caliptra Core are minimalistic scope and maximum applicability. To that end, **Update** and **Recovery** are decoupled from Caliptra Core and are expected to be provided either by Caliptra 2.0 Subsystem or are expected to be provided by an external RoT subsystem, such as a discrete RoT board element on a datacenter platform (passive mode). Because a physical adversary can trivially nullify any recovery or update capabilities, no matter where implemented, decoupling represents no regression in a security posture, while enabling simplicity and applicability for the internal SoC Silicon RoT.
+With the objectives of minimalistic scope for Silicon RoT and maximizing applicability and adoption of this specification, **Update** and **Recovery** are decoupled from Caliptra and are expected to be provided by an external RoT subsystem, such as a discrete RoT board element on a datacenter platform. Because a physical adversary can trivially nullify any recovery or update capabilities, no matter where implemented, decoupling represents no regression in a security posture, while enabling simplicity and applicability for the internal SoC silicon RoT.
 
 Detection of corrupted critical code and data (configuration) requires strong end to end cryptographic integrity verification. To meet the RTD requirements, Silicon RoT shall:
 
-* Cryptographically verify & measure its code and configuration
+* Cryptographically measure its code and configuration
 * Sign these measurements with a unique attestation key
 * Report measurements to a host or external entity, which can further verify the authenticity and integrity of the device (also known as *attestation*)
-* **Recovery** follows Open Compute Project Secure Recovery flows and Streaming Boot. (FIXME: Add links to released specs; they are in draft mode now)
 
-**Measurements** and **Verification** include **Code** and **Configuration**. Configuration includes invasive capabilities that impact the user service level agreement (SLA) on confidentiality; for example, the enablement of debug capabilities that grant an operator access to raw, unencrypted registers for any tenant context. In order to measure and attest configuration, the Silicon RoT must be in control of the configuration.
+**Measurements** include **Code** and **Configuration**. Configuration includes invasive capabilities that impact the user service level agreement (SLA) on confidentiality; for example, the enablement of debug capabilities that grant an operator access to raw, unencrypted registers for any tenant context. In order to measure and attest configuration, the Silicon RoT must be in control of the configuration.
 
 As an extension to controlling configuration, the Silicon RoT must control the security states (for more information, see *[Caliptra Security States](#caliptra-security-states)*). Certain security states by design grant full invasive capabilities to an external operator, for debug or field analysis.
 
@@ -194,7 +191,7 @@ Invasive attacks that involve depackaging or delayering of the SoC/ASIC are out-
 | Debug and register interfaces | Manipulation of externally accessible registers of Caliptra.|Includes all buses that are accessible to components external to Caliptra, including JTAG.|
 | Software interfaces       | Attacker invokes software interfaces that are exposed by Caliptra to external components. | Includes all externally exposed software interfaces from both non-RoT firmware as well as interfaces accessed by external IP blocks. Includes exploiting both design and implementation flaws. For high value assets only (see next subsection), the attacker is assumed to fully control all mutable code of the SoC, including privileged Caliptra mutable code. |
 |Side channel - timing|Attacker observes the elapsed time of different sensitive operations.|Includes attacks where the attacker actively stimulates the sensitive operations while timing.|
-|Cryptographic analysis|Attacker observes plaintext, ciphertext, related data, or immediate values in cryptography to overcome cryptographic controls.| Includes all practical cryptanalysis attacks. Assumes NIST-unapproved algorithms provide no security (for example, SHA-1, Single DES, ChaCha20). Assumes any cryptographic algorithm that provides less than 128 bits of security (as determined by NIST SP 800-57) provides no security. |
+|Cryptographic analysis|Attacker observes plaintext, ciphertext, related data, or immediate values in cryptography to overcome cryptographic controls.| Includes all practical cryptanalysis attacks. Assumes NIST-unapproved algorithms provide no security (for example, SHA-1, Single DES, ChaCha20). Assumes any cryptographic algorithm that provides less than 128 bits of security (as determined by NIST SP 800-57) provides no security. Excludes quantum computer attacks. This exclusion will be removed soon. |
 
 ### Trust boundaries
 
@@ -208,7 +205,7 @@ Trust levels of Caliptra and the SoC security engine are not hierarchical. These
 
 ### Caliptra interactions
 
-The Caliptra Core blocks consume the Tc and Tcw trust level components. This boundary includes crypto accelerators, hardware key sequencer, key vault, Caliptra microcontroller, ROM, and subsystem interconnects. The Caliptra Core provides deterministic Caliptra behavior. Caliptra Core interacts with components in the Tse and Trs trust levels; while Caliptra Subsystem abosrbs the Tse functions.
+The Caliptra Core blocks consume the Tc and Tcw trust level components. This boundary includes crypto accelerators, hardware key sequencer, key vault, Caliptra microcontroller, ROM, and subsystem interconnects. The Caliptra Core provides deterministic Caliptra behavior. Caliptra interacts with components in the Tse and Trs trust levels.
 
 ### <a id="assets"></a>Caliptra assets and threats
 
@@ -255,15 +252,11 @@ The following figure shows the basic high-level blocks of Caliptra.
 
 *Figure 2: Caliptra high level blocks*
 
-![](./images/Caliptra2p0.png)
+![](./images/Caliptra_HW_diagram.png)
 
 See the [hardware section](#hardware) for a detailed discussion.
 
-From Caliptra 2.x onwards, Caliptra introduces two modes of operation. **Passive** mode which was supported in 1.x architecture and **Subsystem** mode. Fundamental difference between passive mode and subsystem mode is that in the subsystem mode Caliptra is the RoT for the SoC and provides streaming boot, secure boot and attestation. In Subsystem mode, Caliptra also provides various crypto API services such as encryption/decryption of SoC FWs, Key releases, Key wraps, hashing etc. to name a few. Please see Caliptra subsystem mode Crypto API section for more details (**FIXME**: section name & details).
-
-**Passive Mode High Level Flow**
-
-Caliptra is among the first microcontrollers taken out of reset by the power-on reset logic. Caliptra coordinates the start of the firmware chain-of-trust with the immutable component of the SoC ROM. After the Caliptra ROM completes initialization, it provides a "stash measurement" API and callback signals for the SoC ROM (passive mode) to proceed with the boot process. Caliptra ROM supports stashing of at most eight measurements prior to the boot of Caliptra RT firmware.  The SoC then may choose to boot Caliptra firmware. Any security-sensitive code or configuration loaded by the SoC prior to Caliptra firmware boot must be stashed within Caliptra. If the SoC exceeds Caliptra ROM's measurement stash capacity, attestation must be disabled until the next cold reset. The boot process is as follows:
+Caliptra is among the first uncore microcontrollers taken out of reset by the power-on reset logic. Caliptra coordinates the start of the firmware chain-of-trust with the immutable component of the SoC ROM. After the Caliptra ROM completes initialization, it provides a "stash measurement" API and callback signals for the SoC ROM to proceed with the boot process. Caliptra ROM supports stashing of at most eight measurements prior to the boot of Caliptra firmware. The SoC then may choose to boot Caliptra firmware. Any security-sensitive code or configuration loaded by the SoC prior to Caliptra firmware boot must be stashed within Caliptra. If the SoC exceeds Caliptra ROM's measurement stash capacity, attestation must be disabled until the next cold reset. The boot process is as follows:
 
 1. Hardware executes SoC power-on reset logic. This logic starts the execution of SoC ROM and Caliptra ROM.
 2. SoC ROM waits for the ready_for_fw signal from Caliptra ROM.
@@ -279,34 +272,13 @@ Caliptra is among the first microcontrollers taken out of reset by the power-on 
 
 See [Error Reporting and Handling](#error-reporting-and-handling) for details about Caliptra and SoC firmware load and verification error handling.
 
-*Figure 3: Passive Caliptra boot flow*
+*Figure 3: Caliptra boot flow*
 
 ![](./images/Boot_flow.png)
-
-**Subsystem Mode Boot Flow**
-
-MCU (Manufacturer Control Unit), that is holds platform & SoC specific FW and Caliptra are among the first microcontrollers taken out of reset by the power-on reset logic. Caliptra is responsible for the start of the firmware chain-of-trust with the immutable component of the MCU ROM. After the Caliptra ROM completes initialization, it provides a "stash measurement" API and callback signals for MCU ROM (subsystem mode) to proceed with the boot process. Caliptra ROM supports stashing of at most eight measurements prior to the boot of Caliptra RT firmware.  Then Caliptra FW is loaded through OCP streaming boot flow. Any security-sensitive code (eg. PLL programming) or configuration (eg. Fuse based Patching) loaded by the MCU prior to Caliptra firmware boot must be stashed within Caliptra. If the MCU exceeds Caliptra ROM's measurement stash capacity, attestation must be disabled until the next cold reset.
-
-Note: This is extremely high level flow, please see the Subsystem Mode Section below for next level specifics.
-
-The high level boot process is as follows:
-
-1. Hardware executes SoC power-on reset logic. This logic starts the execution of MCU ROM and Caliptra ROM.
-2. Recovery interface is gated until ready for recovery is written into recovery interface registers from Caliptra ROM. This happens at the same time as passive mode's ready_for_fw signal.
-3. Caliptra firmware is streamed & then pulled into Caliptra MB SRAM through the OCP streaming boot aka recovery interface by a platform component (typically a BMC-like component).
-        1. Caliptra ROM authenticates, measures, and activates the Caliptra firmware following OCP streaming boot protocol.
-4. SoC manifest is streamed next using the streaming boot protocol, which Caliptra authenticates & measures
-5. This is followed by MCU RT FW through the streaming boot protocol which Caliptra routes to MCU SRAM, authorizes and activates MCU to execute it.
-6. MCU RT FW will go through MCTP enumeration and fetch the remaining SoC blobs (FW, data etc.) using DSP0267 PLDM for Firmware Update over MCTP and uses Caliptra to authorize each of them. Note that MCU may also retrieve some non-FW blobs from a NVM while using Caliptra to perform security operations like integrity verification, decryption etc.
-
-**FIXME: ADD a pic**
-
 
 ## Identity
 
 Caliptra must provide its runtime (RT) code with a cryptographic identity in accordance with the TCG DICE specification. This identity must be rooted in ROM, and provides an attestation over the security state of the RTM as well as the code that the RTM booted.
-
-To ensure quantum-resistant RTM, each certificate includes a dual signatures based on ECC Secp384r1 and PQC MLDSA-87.
 
 *Figure 4: DICE Cert/Key generation*
 
@@ -314,20 +286,19 @@ To ensure quantum-resistant RTM, each certificate includes a dual signatures bas
 
 ### UDS
 
-A combination of mask ROM and HW macros must implement the DICE key derivation and power-on latch, hiding the UDS seed and only making the CDI-derived signing key 'handle' visible to ROM. Real UDS will only be calculated during the cold boot in hardware, used for CDI derivation and immediately gets cleared.
+A combination of mask ROM and HW macros must implement the DICE key derivation and power-on latch, hiding the UDS seed and only making the CDI-derived signing public key visible to ROM and private key 'handle' available to ROM. Real UDS will only be calculated during the cold boot, used for CDI derivation and immediately gets cleared.
 
-The Caliptra UDS seed is stored as ciphertext in fuses, deobfuscated only on cold boot using a obfuscation key[^2] known only to the Caliptra Hardware. Once read by Caliptra HW at boot, the unobfuscated UDS is then used to derive the IDevID identity and immediately cleared by hardware.
+The Caliptra UDS seed is stored as ciphertext in fuses, deobfuscated only on cold boot using an obfuscation key[^2] known only to the Caliptra Hardware. Once read by Caliptra HW at boot, the unobfuscated UDS is then used to derive the IDevID identity and immediately cleared by hardware.
 
 ### IDevID key
 
-Caliptra's IDevID key is a hardware identity generated by Caliptra ROM during manufacturing. This key "handle" must be solely wielded by Caliptra ROM, and shall never be exposed externally at any phase of the Caliptra lifecycle. IDevID is used to endorse LDevID. Caliptra supports both classic and post-quantum algorithms for endorsement based on ECDSA Secp384r1 and PQC MLDSA-87, respectively.
-The [IDevID certificate](#idevid-certificate) is endorsed by the vendor’s provisioning CA (pCA) that is implemented via a HSM appliance connected to High Volume Manufacturing (HVM) flows (see provisioning CA in [Reference 8](#ref-8)).
+Caliptra's IDevID key is a hardware identity generated by Caliptra ROM during manufacturing. This key "handle" must be solely wielded by Caliptra ROM, and shall never be exposed externally at any phase of the Caliptra lifecycle. IDevID is used to endorse LDevID. The [IDevID certificate](#idevid-certificate) is endorsed by the vendor’s provisioning CA (pCA) that is implemented via a HSM appliance connected to High Volume Manufacturing (HVM) flows (see provisioning CA in [Reference 8](#ref-8)).
 
 See [Provisioning IDevID During Manufacturing](#provisioning-idevid-during-manufacturing) for further details on IDevID provisioning.
 
 ### LDevID key
 
-Caliptra shall support field-programmable entropy, which factors into the device's LDevID identity. The [LDevID certificate](#ldevid-certificate) is endorsed by IDevID and in turn endorses the FMC alias key. Caliptra supports both classic and post-quantum algorithms for endorsement based on ECDSA Secp384r1 and PQC MLDSA-87, respectively.
+Caliptra shall support field-programmable entropy, which factors into the device's LDevID identity. The [LDevID certificate](#ldevid-certificate) is endorsed by IDevID and in turn endorses the FMC alias key.
 
 Caliptra's field-programmable entropy shall consist of two 16-byte slots. All slots are used to derive LDevID. An owner may decide to program as few or as many slots as they wish. Upon programming new entropy, on the next reset the device begins wielding its fresh LDevID. Owners need to validate the new LDevID by using IDevID.
 
@@ -340,9 +311,7 @@ An ideal IDevID has the following properties:
 * Cannot be cloned to additional devices of the same class.
 * Private component cannot be extracted from Caliptra.
 
-Caliptra 2.0 provides integrity over IDevID Certificate Signing Requests (CSRs).
-
-Caliptra 1.0 alone does not fully address these properties. For example, a person-in-the-middle supply chain adversary could impersonate Caliptra by submitting its own IDevID CSR to the pCA. Vendors should threat model the IDevID generation and endorsement flows for their SoC. Threat actors to consider are the following:
+Caliptra 1.0 alone does not fully address these properties. For example, a person-in-the-middle supply chain adversary could impersonate Caliptra by submitting its own IDevID Certificate Signing Request (CSR) to the pCA. Vendors should threat model the IDevID generation and endorsement flows for their SoC. Threat actors to consider are the following:
 
 * Components involved in UDS injection flows: can they inject the same obfuscated UDS to multiple devices, or to devices of different classes? Can they wield the obfuscation key to leak the UDS?
 * Components servicing the connectivity between the Caliptra instantiation and the HSM applicance performing IDevID endorsement: can they alter or impersonate Caliptra's IDevID CSR?
@@ -393,30 +362,11 @@ The SoC may support a fuse bank for representing the hash of the owner's public 
 
 The owner key, when represented in fuses or in the FMC's alias certificate, is a SHA384 hash of a structure that contains a list of owner public keys. This supports key rotation.
 
-## Provisioning UDS during Manufacturing (Subsystem Mode)
-**Note:** In passive mode, SoC follows the same flows/restrictions as Caliptra 1.x
-
-![](./images/Manuf-UDS-Flow.png)
-
-*Figure 6: Subsystem Mode: UDS manufacturing flow*
-
-There are three ways of generating a UDS_SEED
-Use the internal TRNG to directly generate a 384-bit random number.
-Use an entity external to Caliptra such as an HSM or SoC-specific methodology to produce UDS-seed 384-bit random number that is pushed into the fuse controller (same as Caliptra 1.0).
-Combine the internal TRNG output with a Manufacturing time provided value to produce a 384-bit output.
-
-**UDS Manufacturing**
-1. When SoC life cycle is in MANUFACTURING MODE, manufacturing service register bit [CPTRA_DBG_MANUF_SERVICE_REG[2]] is set to request for UDS seed programming flow.
-2. Caliptra ROM will sample this bit on power up; when this bit is set and Caliptra ROM rechecks that the life cycle state is manufacturing mode, it reads the iTRNG for a 512-bit value.
-3. Caliptra ROM writes the 512-bit value to the address available through a register named UDS_SEED_OFFSET which is strapped by SoC at integration time by using DMA HW assist macro available at ROM’s disposal.
-4. Caliptra ROM sets the corresponding status bit in CPTRA_DBG_MANUF_SERVICE_REG to indicate the flow completion.
-5. Manufacturing flow will poll/read this bit and then do the fuse burning flow as specified by the fuse controller spec and SoC specific VR methodologies (eg. Fuse macro voltage elevation flows etc.).
-
 ## Provisioning IDevID during manufacturing
 
 ![](./images/Caliptra_manuf_flow1.png)
 
-*Figure 7: Passive Mode: Device manufacturing identity flow*
+*Figure 5: Device manufacturing identity flow*
 
 1. High Volume Manufacturing (HVM) programs the IDevID certificate attributes fuses. See [IDevID Certificate](#idevid-certificate) for encodings.
 2. HVM programs NIST compliant UDS into fuses using SoC-specific fuse programming flow. Note that this UDS goes through an obfuscation function within Caliptra IP.
@@ -454,7 +404,7 @@ Caliptra uses certificate templates to avoid implementing fully capable X.509 v3
 * First octet as non-zero
 * 20 octets in length
 
-All Caliptra certificate serial numbers are generated with the following algorithm. The input is the certificate ECDSA or PQC MLDSA-87 public key in uncompressed form:
+All Caliptra certificate serial numbers are generated with the following algorithm. The input is the certificate ECDSA public key in uncompressed form:
 
 1. Convert to DER format.
 2. Compute SHA256 digest.
@@ -678,7 +628,7 @@ The service surface of Caliptra has multiple vectors. All use cases are control 
   * **Loading firmware**: Caliptra firmware is loaded via the mailbox at cold boot. In addition, Caliptra firmware can be loaded at runtime to support hitless or impactless updates.
   * **DICE-as-a-Service**: Caliptra shall expose the TCG DICE Protection Environment iRoT Profile API, allowing Caliptra to derive and wield a DICE identity on behalf of other elements within the SoC. For example, Caliptra can sign messages for an SPDM responder.
   * **Measurement Vault**: Caliptra shall support stashing of measurements for the code and configuration of the SoC. Caliptra can provide these measurements via PCR Quote API or via DPE.
-  * **FW Authentication**: Caliptra supports ECDSA and PQC MLDSA-87 verification for SoC firmware beyond its own. The SHA384 block exposes a HW API for hashing firmware. The runtime firmware exposes an ECDSA and MLDSA-87 verification API that uses the hash computed by the SHA384 block.
+  * **FW Authentication**: Caliptra supports ECDSA verification for SoC firmware beyond its own. The SHA384 block exposes a HW API for hashing firmware. The runtime firmware exposes an ECDSA verification API that uses the hash computed by the SHA384 block.
 
 ## Device resilience
 
@@ -752,12 +702,11 @@ For PCR0 and PCR1, ROM issues the following extend operations in order:
    2. Debug locked state
    3. Anti-rollback disable fuse
    4. ECDSA vendor public key index
-   5. MLDSA-87 vendor public key index
-   6. FMC SVN
-   7. Effective Fuse SVN (i.e., 0 if anti-rollback disable is set)
-   8. LMS vendor public key index
-   9. LMS verification enable fuse
-   10. Boolean indicating whether the owner public key hash is in fuses
+   5. FMC SVN
+   6. Effective Fuse SVN (i.e., 0 if anti-rollback disable is set)
+   7. LMS vendor public key index
+   8. LMS verification enable fuse
+   9. Boolean indicating whether the owner public key hash is in fuses
 2. Vendor public key hash
 3. Owner public key hash
 4. Digest of FMC
@@ -765,7 +714,6 @@ For PCR0 and PCR1, ROM issues the following extend operations in order:
 Caliptra ROM fails to boot if the following values do not remain constant across a hitless update:
 * Owner public key hash
 * ECDSA vendor public key index
-* MLDSA-87 vendor public key index
 * LMS vendor public key index
 * FMC digest
 
@@ -844,7 +792,7 @@ The corresponding journey measurement computation is the chained extension of \[
 
 ## Anti-rollback support
 
-Caliptra shall provide fuse banks (refer to *Table 20: Caliptra Fuse Map*) that are used for storing monotonic counters to provide anti-rollback enforcement for Caliptra mutable firmware. Each distinctly signed boot stage shall be associated with its own anti-rollback fuse field. Together with the vendor, Caliptra allows owners to enforce strong anti-rollback requirements, in addition to supporting rollback to a previous firmware version. This is a critical capability for hyper scalar owners.
+Caliptra shall provide fuse banks (refer to *Table 19: Caliptra Fuse Map*) that are used for storing monotonic counters to provide anti-rollback enforcement for Caliptra mutable firmware. Each distinctly signed boot stage shall be associated with its own anti-rollback fuse field. Together with the vendor, Caliptra allows owners to enforce strong anti-rollback requirements, in addition to supporting rollback to a previous firmware version. This is a critical capability for hyper scalar owners.
 
 Every mutable Caliptra boot layer shall include a SVN value in the signed header. If a layer's signed SVN value is less than the current counter value for that layer's fuse bank, Caliptra shall refuse to boot that layer, regardless of whether the signature is valid.
 
@@ -899,7 +847,6 @@ A detailed description of the POST and CAST KATs can be found at csrc.nist.gov.
 | **Crypto algorithm** | **Caliptra Boot ROM** | **Caliptra FMC** | **Caliptra Runtime FW**
 | -------------------- | --------------------- | ---------------- | -----------------------
 | ECDSA[^8]            | Yes                   | Yes              | Yes
-| MLDSA-87[^8]         | Yes                   | Yes              | Yes
 | AES                  | Yes                   | No               | No
 | SHA[^9]              | Yes                   | Yes              | Yes
 | DRBG                 | No                    | No               | No
@@ -910,7 +857,7 @@ As shown in *Table 15: POST/CAST usage*, since the cryptographic algorithms requ
 
 ## Firmware image format and verification
 
-Caliptra supports verifying firmware with ECDSA P384 and MLDSA-87 signatures and [Leighton-Micali Hash-based Signatures (LMS)](#post-quantum-cryptography-pqc-requirements) in accordance with the requirements described in [Reference 3](#ref-3).
+Caliptra supports verifying firmware with ECDSA P384 signatures and [Leighton-Micali Hash-based Signatures (LMS)](#post-quantum-cryptography-pqc-requirements) in accordance with the requirements described in [Reference 3](#ref-3).
 
 Caliptra firmware is composed of two images: an FMC image and an application firmware image. A single firmware manifest describes these images. The manifest consists of a preamble (*Table 16*), a header (*Table 17*), and a Table of Contents (TOC) (*Table 18*). The image layout is shown in *Figure 7: firmware image layout*.
 
@@ -919,19 +866,18 @@ Caliptra firmware is composed of two images: an FMC image and an application fir
 *Figure 7: Firmware image layout*
 
 To verify the firmware, Caliptra ROM performs the following steps:
-1. Calculates the hash of the vendor [key descriptors](#table-17-public-key-descriptor) in the preamble and compares it against the hash in fuses (key_manifest_pk_hash). If the lifecycle is not "unprovisioned" and the hashes do not match, the boot fails.
-2. Calculates the hashes of the active vendor public keys and compares it against the hashes in the key descriptors identified by the corresponding active key indices.
-3. Calculates the hash of the owner public keys in the preamble and compares it against the hash in fuses (owner_pk_hash). If the owner_pk_hash fuse is not zero (i.e., unprovisioned) and hashes do not match, the boot fails. See the [Owner authorization](#owner-authorization) section.
-4. Ensures the vendor public key(s) selected by the preamble indices are not revoked based on fuse: key_manifest_pk_hash_mask for ECDSA public key, pqc_revocation for LMS or MLDSA public key.
-5. Calculates the hash of the first byte through the vendor data field of the header (this includes the TOC digest). This is the vendor firmware digest.
-6. Calculates the hash of the first byte through the owner data field of the header (this includes the TOC digest). This is the owner firmware digest.
-7. Verifies the vendor signature using the vendor firmware digest from step 5 and the vendor key(s) from step 4.
-8. Verifies the owner signature using the owner firmware digest from step 6 and the owner key(s) from step 3.
-9. Verifies the TOC against the TOC digest that was verified in steps 6 and 7. The TOC contains the SVNs and digests for the FMC and runtime images.
-10. Verifies the FMC against the FMC digest in the TOC.
-11. If Caliptra is not in "unprovisioned" lifecycle state or "anti-rollback disable" state, ROM compares the FMC SVN against FMC SVN fuse (fuse_key_manifest_svn).
-12. Verifies the runtime against the runtime digest in the TOC.
-13. If Caliptra is not in "unprovisioned" lifecycle state or "anti-rollback disable" state, ROM compares the runtime digest against the runtime SVN fuse (fuse_runtime_svn).
+1. Calculates the hash of the vendor public keys in the preamble and compares it against the hash in fuses (key_manifest_pk_hash). If the lifecycle is not "unprovisioned" and the hashes do not match, the boot fails.
+2. Calculates the hash of the owner public keys in the preamble and compares it against the hash in fuses (owner_pk_hash). If the owner_pk_hash fuse is not zero (i.e., unprovisioned) and hashes do not match, the boot fails. See the [Owner authorization](#owner-authorization) section.
+3. Ensures the vendor public key(s) selected by the preamble indices are not revoked based on fuse: key_manifest_pk_hash_mask for ECDSA public key, lms_revocation for LMS public key.
+4. Calculates the hash of the first byte through the vendor data field of the header (this includes the TOC digest). This is the vendor firmware digest.
+5. Calculates the hash of the first byte through the owner data field of the header (this includes the TOC digest). This is the owner firmware digest.
+6. Verifies the vendor signature using the vendor firmware digest from step 4 and the vendor key(s) from step 3.
+7. Verifies the owner signature using the owner firmware digest from step 5 and the owner key(s) from step 2.
+8. Verifies the TOC against the TOC digest that was verified in steps 6 and 7. The TOC contains the SVNs and digests for the FMC and runtime images.
+9. Verifies the FMC against the FMC digest in the TOC.
+10. If Caliptra is not in "unprovisioned" lifecycle state or "anti-rollback disable" state, ROM compares the FMC SVN against FMC SVN fuse (fuse_key_manifest_svn).
+11. Verifies the runtime against the runtime digest in the TOC.
+12. If Caliptra is not in "unprovisioned" lifecycle state or "anti-rollback disable" state, ROM compares the runtime digest against the runtime SVN fuse (fuse_runtime_svn).
 
 In addition to cold boot, Caliptra ROM performs firmware verification on hitless updates. See the [hitless update](#hitless-update) section for details.
 
@@ -943,45 +889,34 @@ Fields are little endian unless described otherwise.
 |-------|--------|------------|
 | Firmware Manifest Marker | 4 | Magic Number marking the start of the package manifest. The value must be 0x434D414E (‘CMAN’ in ASCII)|
 | Firmware Manifest Size | 4 | Size of the full manifest structure |
-| Firmware Manifest Type | 4 |  **Byte0:** - Type <br> 0x1 – ECDSA & LMS Keys <br> 0x2 – ECDSA & MLDSA Keys <br> **Byte1-Byte3:** Reserved|
-| Vendor ECDSA Key Descriptor | 196 | Public Key Descriptor for ECDSA keys |
-| Vendor LMS or MLDSA Key Descriptor | 1540 | Public Key Descriptor for LMS (1540 bytes) or MLDSA (196 bytes + 1344 unused bytes) keys |
-| Active ECDSA Key Index | 4 | Public Key Index for the active ECDSA key |
-| Active ECDSA Key | 96 | ECDSA P384 public key used to verify the Firmware Manifest Header Signature <br> **X-Coordinate:** Public Key X-Coordinate (48 bytes, big endian) <br> **Y-Coordinate:** Public Key Y-Coordinate (48 bytes, big endian) |
-| Active LMS or MLDSA Key Index | 4 | Public Key Index for the active LMS or MLDSA key |
-| Active LMS or MLDSA Key | 2592 | LMS public key (48 bytes + 2544 unused bytes) used to verify the Firmware Manifest Header Signature. <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **otstype:** LM-OTS Algorithm Type (4 bytes, big endian) Must equal 7. <br> **id:**  (16 bytes) <br> **digest:**  (24 bytes) <br><br>**OR**<br><br>MLDSA-87 public key used to verify the Firmware Manifest Header Signature. <br> (2592 bytes)|
+| Vendor ECDSA Public Key 1 | 96 | ECDSA P384 public key used to verify the Firmware Manifest Header Signature. <br> **X-Coordinate:** Public Key X-Coordinate (48 bytes, big endian) <br> **Y-Coordinate:** Public Key Y-Coordinate (48 bytes, big endian) |
+| Vendor ECDSA Public Key 2 | 96 | ECDSA P384 public key used to verify the Firmware Manifest Header Signature. <br> **X-Coordinate:** Public Key X-Coordinate (48 bytes, big endian) <br> **Y-Coordinate:** Public Key Y-Coordinate (48 bytes, big endian) |
+| Vendor ECDSA Public Key 3 | 96 | ECDSA P384 public key used to verify the Firmware Manifest Header Signature. <br> **X-Coordinate:** Public Key X-Coordinate (48 bytes, big endian) <br> **Y-Coordinate:** Public Key Y-Coordinate (48 bytes, big endian) |
+| Vendor ECDSA Public Key 4 | 96 | ECDSA P384 public key used to verify the Firmware Manifest Header Signature. <br> **X-Coordinate:** Public Key X-Coordinate (48 bytes, big endian) <br> **Y-Coordinate:** Public Key Y-Coordinate (48 bytes, big endian) |
+| Vendor LMS Public Key 1 | 48 | LMS public key used to verify the Firmware Manifest Header Signature. <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **otstype:** LM-OTS Algorithm Type (4 bytes, big endian) Must equal 7. <br> **id:**  (16 bytes) <br> **digest:**  (24 bytes) |
+| Vendor LMS Public Key 2 | 48 | LMS public key used to verify the Firmware Manifest Header Signature. <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **otstype:** LM-OTS Algorithm Type (4 bytes, big endian) Must equal 7. <br> **id:**  (16 bytes) <br> **digest:**  (24 bytes) |
+| .<br>.<br>|
+| Vendor LMS Public Key 32 | | |
+| ECDSA Public Key Index Hint | 4 | The hint to ROM to indicate which ECDSA public key it should first use.  |
+| LMS Public Key Index Hint | 4 | The hint to ROM to indicate which LMS public key it should first use.  |
 | Vendor ECDSA Signature | 96 | Vendor ECDSA P384 signature of the Firmware Manifest header hashed using SHA384. <br> **R-Coordinate:** Random Point (48 bytes, big endian) <br> **S-Coordinate:** Proof (48 bytes, big endian) |
-| Vendor LMS or MLDSA Signature | 4628 | Vendor LMS signature (1620 bytes + 3008 unused bytes) of the Firmware Manifest header hashed using SHA384. <br> **q:** Leaf of the Merkle tree where the OTS public key appears (4 bytes) <br> **ots:** LM-OTS Signature (1252 bytes) <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **tree_path:** Path through the tree from the leaf associated with the LM-OTS signature to the root. (360 bytes) <br><br>**OR**<br><br> Vendor MLDSA-87 signature of the Firmware Manifest header hashed using SHA512 (4627 bytes + 1 Reserved byte).|
-| Owner ECDSA Key Descriptor | 52 | Public Key Descriptor for ECDSA key |
-| Owner LMS or MLDSA Key Descriptor | 52 | Public Key Descriptor for LMS or MLDSA key |
+| Vendor LMS Signature | 1620 | Vendor LMS signature of the Firmware Manifest header hashed using SHA384. <br> **q:** Leaf of the Merkle tree where the OTS public key appears (4 bytes) <br> **ots:** LM-OTS Signature (1252 bytes) <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **tree_path:** Path through the tree from the leaf associated with the LM-OTS signature to the root. (360 bytes) |
 | Owner ECDSA Public Key | 96 | ECDSA P384 public key used to verify the Firmware Manifest Header Signature. <br> **X-Coordinate:** Public Key X-Coordinate (48 bytes, big endian) <br> **Y-Coordinate:** Public Key Y-Coordinate (48 bytes, big endian)|
-| Owner LMS or MLDSA Public Key | 2592 | LMS public key (48 bytes + 2544 unused bytes)  used to verify the Firmware Manifest Header Signature. <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **otstype:** LM-OTS Algorithm Type (4 bytes, big endian) Must equal 7. <br> **id:**  (16 bytes) <br> **digest:**  (24 bytes) <br><br>**OR**<br><br>MLDSA-87 public key used to verify the Firmware Manifest Header Signature. <br> (2592 bytes)|
+| Owner LMS Public Key | 48 | LMS public key used to verify the Firmware Manifest Header Signature. <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **otstype:** LM-OTS Algorithm Type (4 bytes, big endian) Must equal 7. <br> **id:**  (16 bytes) <br> **digest:**  (24 bytes) |
 | Owner ECDSA Signature | 96 | Vendor ECDSA P384 signature of the Firmware Manifest header hashed using SHA384. <br> **R-Coordinate:** Random Point (48 bytes, big endian) <br> **S-Coordinate:** Proof (48 bytes, big endian) |
-| Owner LMS or MLDSA Signature | 4628 | Owner LMS signature (1620 bytes + 3008 unused bytes) of the Firmware Manifest header hashed using SHA384. <br> **q:** Leaf of the Merkle tree where the OTS public key appears (4 bytes) <br> **ots:** LM-OTS Signature (1252 bytes) <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **tree_path:** Path through the tree from the leaf associated with the LM-OTS signature to the root. (360 bytes) <br><br>**OR**<br><br> Owner MLDSA-87 signature of the Firmware Manifest header hashed using SHA512 (4627 bytes + 1 Reserved byte).|
+| Owner LMS Signature | 1620 | Owner LMS signature of the Firmware Manifest header hashed using SHA384. <br> **q:** Leaf of the Merkle tree where the OTS public key appears (4 bytes) <br> **ots:** LM-OTS Signature (1252 bytes) <br> **tree_type:** LMS Algorithm Type (4 bytes, big endian) Must equal 12. <br> **tree_path:** Path through the tree from the leaf associated with the LM-OTS signature to the root. (360 bytes) |
 | Reserved | 8 | Reserved 8 bytes |
-
-#### *Table 17: Public Key Descriptor*
-
-Fields are little endian unless described otherwise.
-
-| Field | Size (bytes) | Description|
-|-------|--------|------------|
-| Key Descriptor Version | 1 | Version of the Key Descriptor. The value must be 0x1 for Caliptra 2.x |
-| Intent | 1 | Type of the descriptor <br> 0x1 - Vendor  <br> 0x2 - Owner |
-| Key Type | 1 | Type of the key in the descriptor <br> 0x1 - ECC  <br> 0x2 - LMS <br> 0x3 - MLDSA |
-| Key Hash Count | 1 | Number of valid public key hashes  |
-| Public Key Hash(es) | 48 * n | List of valid and invalid (if any) SHA2-384 public key hashes. ECDSA: n = 4, LMS: n = 32, MLDSA: n = 4 |
 <br>
 
-*Table 18: Firmware manifest header*
+*Table 17: Firmware manifest header*
 
 Fields are little endian unless described otherwise.
 
 | Field | Size (bytes) | Description|
 |-------|--------|------------|
 | Revision | 8 | 8-byte version of the firmware image bundle |
-| Vendor ECDSA public key hash index | 4 | The hint to ROM to indicate which ECDSA public key hash it should use to validate the active ECDSA public key. |
-| Vendor LMS or MLDSA public key hash index | 4 | The hint to ROM to indicate which LMS or MLDSA public key hash it should use to validate the active public key. |
+| Vendor ECDSA public key index | 4 | The hint to ROM to indicate which ECDSA public key it should first use. |
+| Vendor LMS public key index | 4 | The hint to ROM to indicate which LMS public key it should first use. |
 | Flags | 4 | Feature flags. <br> **Bit0:** - Interpret the pl0_pauser field. If not set, all PAUSERs are PL1 <br>**Bit1-Bit31:** Reserved |
 | TOC Entry Count | 4 | Number of entries in TOC. |
 | PL0 PAUSER | 4 | The PAUSER with PL0 privileges. This value is used by the RT FW to verify the caller privilege against its PAUSER. The PAUSER is wired through APB. |
@@ -989,7 +924,7 @@ Fields are little endian unless described otherwise.
 | Vendor Data | 40 | Vendor Data. <br> **Not Before:** Vendor Start Date [ASN1 Time Format] for Caliptra-issued certificates (15 bytes) <br> **Not After:** Vendor End Date [ASN1 Time Format] for Caliptra-issued certificates (15 bytes) <br> **Reserved:** (10 bytes) |
 | Owner Data | 40 | Owner Data. <br> **Not Before:** Owner Start Date [ASN1 Time Format] for Caliptra-issued certificate. Takes precedence over vendor start date (15 bytes) <br> **Not After:** Owner End Date [ASN1 Time Format] for Caliptra-issued certificates. Takes precedence over vendor end date (15 bytes) <br> **Reserved:** (10 bytes) |
 
-*Table 19: Table of contents*
+*Table 18: Table of contents*
 
 Fields are little endian unless described otherwise.
 
@@ -1016,21 +951,52 @@ To provide a balance between the number of signatures allowed and signature size
 
 Caliptra supports 32 LMS trees for the vendor and 1 tree for the owner. The SoC can support multiple trees for the owner via ownership transfer. It is recommended that the LMS trees are created from multiple HSMs that are geographically distributed.
 
-Caliptra has an option starting in 2.0 to use ML-DSA-87 signatures in addition to ECDSA to support FIPS 204 and CNSA 2.0 requirements for category 5.
-
-Caliptra provides cryptographic servies to support ML-KEM (in addition to ECDH) key exchanges.
-
 ### Key rotation
 
 Firmware signing key rotation shall follow the requirements described in [Reference 3](#ref-3).
 
 # Hardware
 
-Please refer to Caliptra HW specification -> https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md
+The following figure describes the Caliptra Core.
 
-## Passive Caliptra FW Load flow
+*Figure 8: Caliptra Core block diagram*
 
-*Figure 10: Passive Caliptra FW load flow*
+![](./images/Caliptra_HW_diagram.png)
+
+* Memory requirements:
+  * 128 KiB of ICCM0
+  * 128 KiB for Mailbox as a staged SRAM (for FW staging of impactless updates to do authentication checks on the FW before moving to ICCM)
+  * 128 KiB for DCCM and 48 KiB for ROM
+* Cryptography requirements:
+  * SHA256, SHA384, and SHA512
+  * ECDSA Secp384r1 with HMAC-DRBG - key generation, signing and verification
+  * HMAC SHA384
+  * AES256-CBC
+* Chips Alliance is used for RISC-V.
+* APB is the choice for the SoC-facing interface.
+* JTAG is exported at the IP interface.
+* TRNG is the digital logic and algorithms that are required for random number generation. It requires a physical entropy source input. See the Caliptra IP specification and [integration specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md) for more information.
+  * For SoCs that want to use their own legacy TRNG, Caliptra provides a HW API to push the random number on the request/response handshake. See the Caliptra IP specification and [integration specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md) for more information. **This mode is advised for early development but discouraged for production tape outs due to the lower security assurances of an external TRNG**.
+
+The following figure describes the Caliptra IP HW boot flow.
+
+*Figure 9: Hardware boot flow*
+
+![](./images/Caliptra_boot_flow2.png)
+
+1. As part of the SoC boot flow, SoC may have other infrastructure and entities that boot. That part of the flow is outside the scope of this document. If SoC chooses to bypass Caliptra, then it should have a capability to bypass Caliptra entirely through its proprietary flow. This may be needed for initial power-on and other early validation.
+2. Cptra\_pwrgood is asserted to the Caliptra IP block.
+3. Cptra\_rst\_b is deasserted to the Caliptra IP block. See the integration specification for guidelines on the minimum number of cycles between these two signals.
+4. Caliptra IP now evaluates the strap settings driven through various interface wires (for example, the security or debug state of the SoC).
+5. If SoC is in a debug mode, then security assets are cleared or switched to debug mode.
+6. Caliptra IP asserts Ready\_For\_Fuse wire to the SoC.
+7. The SoC populates the fuse registers, the internal TRNG configuration registers, and the ROM WDT cycle count, then sets the CPTRA\_FUSE\_WR\_DONE bit. Note that Caliptra HW drops writes to any registers that cannot be changed unless there is a power cycle (for example, UDS). So SoC is free to write all the registers.
+8. Caliptra IP deasserts Ready\_for\_Fuse wire as soon as the fuse write done register is written.
+9. Caliptra IP moves security critical assets in fuse registers (for example, UDS) to the key vault.
+
+## Caliptra FW push flow
+
+*Figure 10: FW push flow*
 
 ![](./images/Caliptra_boot_flow3.png)
 
@@ -1040,10 +1006,6 @@ Please refer to Caliptra HW specification -> https://github.com/chipsalliance/ca
 4. SoC follows the mailbox protocol and pushes Caliptra FW into the mailbox.
 5. Caliptra’s mailbox HW  asserts an interrupt to the microcontroller after the GO is written, per mailbox protocol. See [Mailbox](#mailbox) for specifics.
 6. After Caliptra’s FW is authenticated and loaded into ICCM, microcontroller runs the firmware and asserts READY\_FOR\_RTFLOWS wire.
-
-## Subsystem FW Load flow for Subsystem Mode
-
-Please see the subsystem architecture section below.
 
 ## <a id="reset-flow"></a>CPU warm reset or PCIe hot reset flow →  Caliptra IP reset
 
@@ -1062,8 +1024,6 @@ Please see the subsystem architecture section below.
 Because warm reset is a pin input to Caliptra, Caliptra may not be idle when a warm reset occurs. If a warm reset occurs while Caliptra ROM, FMC, or RT initialization code is executing, Caliptra may be inoperable until a subsequent cold reset. If a warm reset occurs while Caliptra runtime is servicing a request, Caliptra shall remain operable but may refuse to wield production assets for subsequent requests.
 
 **Note:** The cold reset flow is not explicitly mentioned but it is the same as the cold boot flow because Caliptra IP has no state through a cold reset.
-**Note:** Subsystem mode's warm reset flow is the same as above, except the warm reset action is triggered/managed by MCU.
-
 
 ## Mailbox
 
@@ -1138,23 +1098,9 @@ The PAUSER field of the APB interface is used to encode device attributes for th
 
 The Caliptra mailbox commands are specified in the [Caliptra runtime firmware specification](https://github.com/chipsalliance/caliptra-sw/blob/main/runtime/README.md#maibox-commands).
 
-### Cryptographic mailbox commands
+### Hash calculation HW API
 
-Cryptographic mailbox (CM) commands are a flexible set of mailbox commands that provide access to Caliptra's cryptographic cabilities.
-This is meant for key storage and use to support protocols like SPDM and OCP LOCK.
-
-These commands are not meant to be high-performance as they are accessed via mailbox commands.
-
-Key material and data will be stored in an encrypted and authenticated section of DCCM. Keys are used via handles that refer to portions of DCCM.
-
-These mailbox commands extend Caliptra's cryptographic support to include SHA, HMAC, HKDF, AES, ECDH, ML-KEM, and RNG services in addition ECDSA and ML-DSA.
-
-The [runtime firmware specification](https://github.com/chipsalliance/caliptra-sw/blob/main/runtime/README.md#cryptographic-mailbox-commands-new-in-20) contains further details.
-
-
-### Hash calculation HW API (Subsystem mode only)
-
-Caliptra provides a HW API to do a SHA384 hash calculation. The SoC can access the accelerator through the Caliptra FW API only in subsystem mode. Caliptra FW API uses the internal SHA accelerator and its DMA widget be hash the required data and present it back to Calitpra FW.
+Caliptra provides a HW API to do a SHA384 hash calculation. The SoC can access the accelerator through this hardware API and stream data to be hashed over the APB interface. The hash is captured into a register for SoC to use or Caliptra FW to be used for the Signature Authentication API.
 
 ### JTAG/TAP debug
 
@@ -1206,9 +1152,9 @@ To ensure that the security claims of Caliptra are achieved, specific fuse prote
 
 All fuse based cryptographic keying material and seeds (for example, UDS Seed) shall be generated (on-chip or off-chip) per requirements described in [Reference 8](#ref-8).
 
-SoC shall support in-field programmable fusing. [Fuse Map](#fuse-map) shows which fuses are expected to be in-field programmable. SoCs shall implement authorization for in-field programmable fusing to mitigate denial-of-service attacks. Authorization design is outside the scope of this specification. In Subsystem mode, SoC may use MCU RT FW for these actions.
+SoC shall support in-field programmable fusing. [Fuse Map](#fuse-map) shows which fuses are expected to be in-field programmable. SoCs shall implement authorization for in-field programmable fusing to mitigate denial-of-service attacks. Authorization design is outside the scope of this specification.
 
-SoC shall support a field entropy programming API. The API shall support retrieving an input value from an external interface. It should cryptographically mix that value with the output of an on-die TRNG to generate the field entropy value. The API implementation shall burn the field entropy value into the first available field entropy fuse slot (or fail if no slots are available). Caliptra is expected to be in any security state. The device owner is expected to call this API in a “clean room environment” to minimize risk of attack on the programming process. In Subsystem mode, SoC may use MCU RT FW for these actions.
+SoC shall support a field entropy programming API. The API shall support retrieving an input value from an external interface. It should cryptographically mix that value with the output of an on-die TRNG to generate the field entropy value. The API implementation shall burn the field entropy value into the first available field entropy fuse slot (or fail if no slots are available). Caliptra is expected to be in any security state. The device owner is expected to call this API in a “clean room environment” to minimize risk of attack on the programming process.
 
 #### Fuse zeroing
 
@@ -1222,42 +1168,35 @@ For SoCs that intend to achieve FIPS 140-3 CMVP certification with Caliptra:
 * SoC shall set Caliptra’s security state to DebugUnlock by ORing it with the zeroization status signal.
 * SoC shall expose Caliptra architectural registers as API for a tester to read.
 * SoC shall ensure authorization for this API to guard against denial-of-service attacks. The authorization design is left to the vendor.
-* Note: In Subsystem mode, SoC should use MCU RT FW with the corresponding subsystem HW components for these actions.
 
 #### Fuse map
 
-**FIXME:** Needs updates for Caliptra 2p0 & Subsystem
 The following table describes Caliptra's fuse map:
 
-*Table 20: Caliptra Fuse Map*
+*Table 19: Caliptra Fuse Map*
 
 | **Name**                        | **Size (bits)** | **ACL**         | **Fuse programming time**                       | **Description** |
 | ------------------------------- | --------------- | --------------- | ----------------------------------------------- | --------------- |
-| UDS SEED (obfuscated)           | 512             | ROM             | SoC manufacturing                               | DICE Unique Device Secret Seed. This seed is unique per device. The seed is scrambled using an obfuscation function. |
+| UDS SEED (obfuscated)           | 384             | ROM             | SoC manufacturing                               | DICE Unique Device Secret Seed. This seed is unique per device. The seed is scrambled using an obfuscation function. |
 | FIELD ENTROPY (obfuscated)      | 256             | ROM             | Device owner in-field programmable | Field-programmable by the owner, used to hedge against UDS disclosure in the supply chain. |
-| VENDOR PK HASH                  | 384             | ROM FMC RUNTIME | SoC manufacturing                               | SHA384 hash of the Vendor ECDSA P384 and LMS or MLDSA Public Key Descriptors. |
-| ECC REVOCATION                  | 4               | ROM FMC RUNTIME | In-field programmable                           | One-hot encoded list of revoked Vendor ECDSA P384 Public Keys (up to 4 keys). |
-| OWNER PK HASH                   | 384             | ROM FMC RUNTIME | In-field programmable                           | SHA384 hash of the Owner ECDSA P384 and LMS or MLDSA Public Keys. |
+| KEY MANIFEST PK HASH            | 384             | ROM FMC RUNTIME | SoC manufacturing                               | SHA384 hash of the Vendor ECDSA P384 and LMS Public Keys. |
+| KEY MANIFEST PK HASH MASK       | 4               | ROM FMC RUNTIME | In-field programmable                           | One-hot encoded list of revoked Vendor ECDSA P384 Public Keys. |
+| OWNER PK HASH                   | 384             | ROM FMC RUNTIME | In-field programmable                           | SHA384 hash of the Owner ECDSA P384 and LMS Public Keys. |
 | FMC KEY MANIFEST SVN            | 32              | ROM FMC RUNTIME | In-field programmable                           | FMC security version number. |
 | RUNTIME SVN                     | 128             | ROM FMC RUNTIME | In-field programmable                           | Runtime firmware security version number. |
 | ANTI-ROLLBACK DISABLE           | 1               | ROM FMC RUNTIME | SoC manufacturing or in-field programmable      | Disables anti-rollback support from Caliptra. (For example, if a Platform RoT is managing FW storage and anti-rollback protection external to the SoC.) |
 | IDEVID CERT IDEVID ATTR         | 768, 352 used   | ROM FMC RUNTIME | SoC manufacturing                               | IDevID Certificate Generation Attributes. See [IDevID certificate section](#idevid-certificate). Caliptra only uses 352 bits. Integrator is not required to back the remaining 416 bits with physical fuses.
 | IDEVID MANUF HSM IDENTIFIER     | 128, 0 used     | ROM FMC RUNTIME | SoC manufacturing                               | Spare bits for Vendor IDevID provisioner CA identifiers. Caliptra does not use these bits. Integrator is not required to back these with physical fuses. |
 | LIFE CYCLE                      | 2               | ROM FMC RUNTIME | SoC manufacturing                               | **Caliptra Boot Media Integrated mode usage only**. SoCs that build with a Boot Media Dependent profile don’t have to account for these fuses.<br> - '00 - Unprovisioned <br> - '01 - Manufacturing<br> - '10 - Undefined<br> - '11 - Production<br> **Reset:** Can only be reset on powergood. |
-| LMS REVOCATION                  | 32              | ROM             | In-field programmable                           | One-hot encoded list of revoked Vendor LMS Public Keys (up to 32 keys). |
-| MLDSA REVOCATION                | 4               | ROM             | In-field programmable                           | One-hot encoded list of revoked Vendor MLDSA Public Keys (up to 4 keys). |
+| LMS VERIFY                      | 1               | ROM             | In-field programmable                           | - 0 - Verify Caliptra firmware images with ECDSA-only.<br> - 1 - Verify Caliptra firmware images with both ECDSA and LMS. |
+| LMS REVOCATION                  | 32              | ROM             | In-field programmable                           | One-hot encoded list of revoked Vendor LMS Public Keys. |
 | SOC STEPPING ID                 | 16              | ROM FMC RUNTIME | SoC manufacturing                               | Identifier assigned by vendor to differentiate silicon steppings. |
-| MANUF_DEBUG_UNLOCK_TOKEN        | 128             | ROM             | SoC manufacturing                               | Secret value for manufacturing debug unlock authorization. |
-| PQC Key Type                    | 2               | ROM FMC RUNTIME | In-field programmable                           | One-hot encoded selection of PQC key type for firmware validation. <br> - **Bit 0** - MLDSA <br> - **Bit 1** - LMS<br>|
-| SOC MANIFEST SVN                | 128             | ROM FMC RUNTIME | In-field programmable                           | One-hot encoded value for the SOC authorization manifest minimum supported SVN. |
-| SOC MANIFEST MAX SVN            | 8               | ROM FMC RUNTIME | In-field programmable                           | Maximum value for the SOC authorization manifest SVN. |
-
 
 # Error reporting and handling
 
 This section describes Caliptra error reporting and handling.
 
-*Table 21: Hardware and firmware error types*
+*Table 20: Hardware and firmware error types*
 
 | | Fatal errors | Non-fatal errors |
 | :- | - | - |
@@ -1287,211 +1226,20 @@ This section describes Caliptra error reporting and handling.
 
 Please refer to [the Caliptra code base](https://github.com/chipsalliance/caliptra-sw/blob/main/error/src/lib.rs) for a list of the error codes.
 
-# Caliptra Security Subsystem
+# Future effort: Caliptra security subsystem
+
+A future effort is a full security subsystem solution. This solution is a combination of fully open source digital logic and licensable analog components that are technology dependent, such as TRNG analog sources or technology dependent fuse controllers.
+
+* SoC Controller has configurable SRAMs and reference firmware.
+* SoC reference ROM allows for configurable initialization.
+* Resource handling logic (RHL) brings up subsystem components such as PUF, PLL, Fuse controller, \[P-\]TRNG. etc. RHL processes requests from Caliptra to the outside components (for example, P-TRNG request input to Caliptra’s internal TRNG).
+* Some of the analog components are licensable IPs that are used to build the subsystem (for example, PUF, and PLL).
+
+*Figure 15: Caliptra security subsystem*
+
+![](./images/Caliptra_HW_Block_diagram.png)
+
 The Caliptra subsystem offers a complete RoT subsystem, with open source programmable components for customization of SoC boot flows.
-
-*Figure: Caliptra security subsystem*
-![](./images/Subsystem.png)
-
-# Caliptra Subsystem Trademark Compliance
-- Caliptra subsystem trademark compliance shall have Caliptra Core 2.0, Life Cycle Controller, Fuse Controller, I3C with recovery interface, Manufacture Control Unit (MCU) and Manufacturer Control Interface (MCI) taken as is without change to ensure there is hardware transparency and consistency.
-- Caliptra subsystem provides life cycle state to the SoC.
-
-# SoC Integration Flexibility
-- SoC may choose to add PLLs (Phase Locked Loop for stable clock generation), SoC specific mailboxes, SoC specific firewalls & address translations, environmental circuitry as some examples.
-- Caliptra subsystem provides flexibility to SoC to remap subsystem driven debug levels to SoC specific debug policies.
-- Please see Subsystem hardware and integration specifications for additional details on subsystem configurability (FIXME: Add md versions once available; right now they are uploaded as pdfs in Caliptra-SS repository's doc folder).
-
-# Caliptra Subsystem Architectural Flows
-
-# Subsystem (Pre-FW Load) Boot Flow
-
-**Note:** Any step done by MCU HW/ROM would have been performed by “SoC Manager” in Caliptra 1p0.
-
-1. SoC (using its HW or MCU ROM) performs pre-steps like bringing up CRO or PLL, MBIST flows on SRAMs, SRAM Init etc.
-2. SoC will assert MCU & Caliptra pwrgood and after 10 cycles MCU
-3. MCU ROM or SoC Manager wrapper will bring up fuse controller and any other SoC specific infrastructure RTL modules (I3C, GPIO programming, Glitch detector programming etc.)
-4. MCU ROM or SoC Manager wrapper will deassert Caliptra reset.
-5. Caliptra HW will read the security centric (secret) fuses.
-6. MCU ROM waits for ready_for_fuses to be asserted.
-7. MCU ROM or SoC Manager will populate the remaining fuses of Caliptra and reads its own fuses (if any). Note that this step is gated behind the completion of security fuse writes to ensure the step has completed.
-8. MCU ROM will write “fuse done” to Caliptra.
-9. Caliptra will go through its boot flow of bringing up uC.
-10. Caliptra ROM starts and executes various KATs flows.
-
-# Subsystem Boot Flow
-
-**_If (Caliptra-Passive-Mode)_**
-
-1. SoC Manager goes through Caliptra 1.x flows => loads Caliptra FW using Caliptra 1.x flows, Caliptra sets RT ready and SOC  <-> Caliptra boot flow is done.
-
-**_(Caliptra-Subsystem-Mode)_**
-
-1. Caliptra ROM waits for SoC infrastructure readiness indication. If this indication is set, Caliptra will do the identity derviation flows. If it is not set, then this flow is run when the SoC infrastructure readiness indication is set.
-2. Caliptra ROM will follow the recovery interface protocol to load its FW. Please see the specific section for next level specifics; At a high level, Caliptra ROM sets the device ready in the I3C controller and poll I3C for the payloads.
-3. BMC or a similar platform component will send the image (code or data) through OCP recovery flow protocol.
-   1. Caliptra ROM should implement a recovery capability to allow for BMC to send ‘data’ instead of ‘code’ as a SOC specific configuration OR allow MCU ROM to send some data to be either integrity checked or authenticated. The data flow and code flow over recovery interface is the same from physical interface point of view and follows the recovery spec as implemented in Caliptra subsystem documentation (please see the recovery section).
-   2. This need for data flow (from flash or BMC) is indicated by a SOC configuration bit to Caliptra ROM.
-   3. This ‘data’ flow is possible only before SOC infra readiness is set. This is specifically used for scenarios where PUF or other characterization data is coming off-chip (say a flash or BMC). **FIXME:** Security and operations impact of this step/flow is being analyzed. This capability/flexibility will be updated or removed once that is finalized.
-   4. This data must be hashed into PCR0
-   5. To keep the scope limited, only one ‘data’ flow is allowed
-4. If the data was required to be run (is indicated by a SOC configuration bit to Caliptra ROM), Caliptra ROM waits for SOC infrastructure readiness to be set. Once set, it will do the required key derivations.
-5.  Caliptra ROM will read the recovery interface registers (data payload registers) over AXI manager interface and write into Caliptra MB SRAM. The offset of the recovery interface registers are available through a config register that is set at SOC integration time or by MCU ROM.
-    1. Note that an intelligent I3C peripheral could “stream” the image. This is a future enhancement.
-6. Caliptra ROM will authenticate its image sitting in Caliptra MB SRAM
-7. Caliptra ROM flow will be similar to Caliptra 1.0 flow with PQC FW Authentication.
-8. Caliptra ROM will derive required keys similar to Caliptra 1.0 flow (while accounting for PQC)
-9. Caliptra ROM will switch to RT image.
-10. Caliptra RT FW will set the RECOVERY INTERFACE (IFC) to allow BMC’s Recovery Agent (RA) to send the next image (which MUST be SOC image manifest).
-    1. BMC RA is required to know the different component of the images using the similar manifestation as DSP0267 PLDM for Firmware Update over MCTP components.
-11. Caliptra RT FW will read the recovery interface registers over AXI manager interface and write the image to its mailbox.
-12. Caliptra RT FW will authenticate SoC manifest using the keys available through Caliptra Image, authenticate the image, capture the measurement and capture the relevant information into DCCM.
-13. Caliptra RT FW will set the RECOVERY INTERFACE (IFC) to allow BMC’s Recovery Agent (RA) to send the next image (which MUST be MCU image manifest).
-    1. BMC RA is required to know the different component of the images using the similar manifestation as DSP0267 PLDM for Firmware Update over MCTP components.
-14. Caliptra RT FW will read the recovery interface registers over AXI manager interface and write the image to MCU SRAM aperture (that is open to Caliptra only by HW construction).
-    1. The address of the MCU SRAM is provided to Caliptra’s RT FW through SOC manifest.
-    2. Note: From validation front, need to ensure the Caliptra ROM and MCU are aligned in endianness.
-15. Caliptra RT FW will instruct Caliptra HW to read MCU SRAM and generate the hash (Caliptra HW will use the SHA accelerator and AXI mastering capabilities to do this)
-    > **Open**: Should we have a capability to do something like this for decryption too? (Key to be provided by MCU/SOC before running the decryption flow?)
-16. Caliptra RT FW will use this hash and verify it against the hash in the SOC manifest.
-17. Caliptra RT FW after verifying/authorizing the image and if it passes, it will set EXEC/GO bit into the register as specified in the previous command. This register write will also assert a Caliptra interface wire.
-    1. MCU ROM will be polling the breadcrumb that the MCU SRAM has valid content and will jump to the MCU SRAM to execute from it. **NOTE:** This breadcrumb should be one of the status bits available on the MCU interface that is set by Caliptra GO bit wires.
-    2. Until this step MCU SRAM aperture that holds the MCU RT FW and certain recovery interface registers are not accessible to MCU.
-18. MCU RT FW will now set recovery flow is completed.
-19. BMC or a similar platform component will now do MCTP enumeration flow to MCU over I3C.
-20. MCU RT FW is responsible for responding to all MCTP requests.
-21. MCU RT FW will do the PLDM T5 flow, extract FW or configuration payload, use Caliptra to authenticate and deploy the rest of the images as described in run-time authentication flows.
-
-*Figure: Subsystem Boot Flow*
-![](./images/Subsystem-BootFlow.png)
-
-**Common Run-time Authentication Flows**
-
-1. MCU RT FW will do PLDM T5 flow to obtain the FW images for downstream uControllers (or other SoC configuration)
-2. MCU RT FW will send/stream the (FW or config) payload to Caliptra SHA Acc to perform hash measurements as the payload comes through the MCTP transport.
-3. MCU RT FW can either stage the entire image or write to the final destination as a part of the previous step depending on the SOC construction.
-    1. Note: By SOC security/design construction, the FW/payload that is loaded must NOT be allowed to execute or be used until Caliptra authorizes that the FW/payload.
-4. MCU RT FW will issue the imageID & GO-field bit (bit that Caliptra RT FW would set if the image authorization is successful) to Caliptra RT FW to start off the process of image authorization of the image that was hashed.
-5. Caliptra RT FW will obtain this hash from the internal SHA accelerator register that was used to hash in the previous step.
-6. Caliptra RT FW after verifying/authorizing the image and if it passes, it will set EXEC/GO bit into the register as specified in the previous command. This register  write will also assert a Caliptra interface wire.
-7. MCU RT FW has an option of looking at the Mailbox command success or read the register or use the wire that the register will drive to allow the execution of the FW. This wire allows SOCs to construct a hardened logic of allowing executions from ICCM/TCMs only after the wire is set.
-    1. SOC construction outside of MCU SRAM is SOC specific construction and the spec here provides recommendations on using MCU and Caliptra to build such a logic. Please refer to Caliptra subsystem hardware specification for construction specifics (Hint: These functions are integrated into Manufacturer Control Interface [MCI]).
-    2. Any logic outside of the Caliptra Subsystem boundary is SoC specific and will be custom to the SoC design. This specification provides recommendations for how Caliptra and MCU may be integrated into the SoC.
-
-**FIXME:** Add the visio flow picture
-
-# Subsystem support for Hitless Updates
-
-**Caliptra Hitless Update**
-
-1. Payloads of all hitless update come over DSP0267 PLDM for Firmware Update over MCTP flow to the MCU similar to the boot time flows.
-2. MCU provides SOC manifest to Caliptra and waits for authentication to be successful. If this wasn’t provided Caliptra will use the latest SOC manifest available.
-    1. If failed, MCU uses DSP0267 PLDM for Firmware Update over MCTP to report the same to the update agent using PLDM protocol
-3. MCU provides the Caliptra FW using Caliptra Mailbox using the hitless update flows documented in the Caliptra specification
-
-**MCU Hitless Update**
-
-1. Payloads of all hitless update come over DSP0267 PLDM for Firmware Update over MCTP flow to the MCU similar to the boot time flows.
-2. MCU provides SOC manifest to Caliptra and waits for authentication to be successful. If this wasn’t provided Caliptra will use the latest SOC manifest available.
-    1. If failed, MCU uses DSP0267 PLDM for Firmware Update over MCTP to report the same to the update agent using PLDM protocol
-3. MCU stages the incoming FW payload in an SOC-defined staging SRAM and provides the MMIO address of the staging memory to Caliptra. It is better to keep this as a part of the authenticated SOC manifest (as a configuration) from a security perspective.
-4. Caliptra RT FW will use the Caliptra DMA engine to issue the read and hash the image (note that the length of the image must be part of the SOC manifest)
-5. Caliptra RT FW after verifying/authorizing the image and if it passes, waits for activate command to be issued from MCU. MCU will get this command over DSP0267 PLDM for Firmware Update over MCTP flow; At this point, Caliptra will reset EXEC/GO bit into the register as specified in the previous command. This register write will also deassert a Caliptra interface wire.
-6. MCU HW logic will use this indication to initiate MCU uC reset flow
-    1. MCU HW logic sends a reset-go-req to MCU uC (an interrupt)
-    2. MCU HW logic waits for reset-go-ack from MCU uC (Note that this handshake exists to ensure uController is in an appropriate quiescent state to take the reset)
-    3. MCU HW logic will assert the reset to the MCU uC
-7. Caliptra RT FW will wait for reset assertion and then read the staged SRAM over AXI manager interface and write the image to the MCU SRAM aperture (that is open to Caliptra only by HW construction).
-    1. The address of the MCU SRAM is provided to Caliptra’s RT FW through SOC manifest.
-    2. Note: From the validation front, need to ensure the Caliptra ROM and MCU are aligned in endianness.
-    3. Note: True downtime of MCU is from when its reset is asserted; It is SOC implementation requirement that it handles (eg. through buffering) all transactions to MCU while it is going through a hitless update.
-8. After the MCU SRAM is populated, Caliptra RT FW will set EXEC/GO bit into the register as specified in the previous command. This register write will also assert a Caliptra interface wire.
-9. MCU HW logic will use this indication to deassert the MCU reset.
-10. MCU ROM will look at the breadcrumb that the MCU SRAM has valid content and will start the execution from it directly. **NOTE:** This breadcrumb should be one of the status bits available on the MCU interface that is set by Caliptra GO bit wires.
-
-**SoC-FW Hitless Update**
-
-SoC may have other components that may need to be updated at run-time in a hitless/impactless manner.
-
-The update flow will follow the same sequence as MCU Hitless update except they are executed by the MCU by using Caliptra as the RoT engine for doing all the required authentication/authorization flows.
-
-Further SoCs may require the hitless update without impacting the workloads/VMs running on the host or the VMs using the devices. This essentially means that impactless update must happen without causing any timeouts to the in-flight transactions. While the treatment of those transactions are device dependent, Caliptra subsystem must provide a way to be able to authenticate and activate the FW in the shortest time possible.
-
-Caliptra subsystem provides this architectural capability as follows:
-1. MCU provides SOC manifest to Caliptra and waits for authentication to be successful. If this wasn’t provided Caliptra will use the latest SOC manifest available.
-    1. If failed, MCU uses DSP0267 PLDM for Firmware Update over MCTP to report the same to the update agent using PLDM protocol
-2. MCU stages all the incoming FW payload in an SOC-defined staging memory and provides the MMIO address of the staging SRAM to Caliptra. It is better to keep this as a part of the authenticated SOC manifest (as a configuration) from security perspective. (**FW Arch requirement:** This SOC-defined staging RAM MMIO offset which can be one for all the images or it could be per image, recommended to keep it the later way, should be defined in the SOC manifest.)
-3. Caliptra RT FW will use the Caliptra DMA engine to issue the read and hash the image (note that the length of the each image must be part of the SOC manifest)
-4. Caliptra RT FW will verify & authorize the images. It will also compare the hash of the images against the “current” hash of each of the image.
-5. MCU will send the ‘activate’ command to Caliptra (which is part of PLDM spec that MCU understands)
-6. If MCU FW is updated/new, Caliptra will execute the MCU Hitless update flow.
-7. Caliptra RT FW will then set the GO bits for all the SoC FWs that are updated (vs what was already running)
-8. SoC specific logic & MCU RT FW will use this information to update the remaining FW using SoC specific architectural flows. **Note:** Since this work is mainly distribution of the FW to the destination uCs, SoC should be built to do this flow as fast as possible to meet workload non-interruption/impactless requirements.
-
-# Multi-Chiplet Flows
-
-This section explain how generic FW Load Flows would function for SoCs with multiple chiplets that are required to have their security controller functions. It is plausible that a SoC is built with a single security controller active on one chiplet and that serves all other chiplets.
-
-**Note:** Additional control signals that MCU would control are SoC specific and are implemented through SoC widget(s).
-
-1. Primary tile uses Caliptra-Subsystem-Mode at its silicon boot time
-2. Secondary tile’s MCU ROM will go through the same common boot flow as the primary tile (except the peripheral could be inter-chiplet link).
-3. Secondary tile’s MCU ROM will wait for inter-chiplet link to be available for use (this would be an indication to MCU ROM)
-4. Primary tile’s MCU RT FW will fetch the secondary tile’s FW using DSP0267 PLDM for Firmware Update over MCTP T5 flow and ‘stream’ using the same recovery interface protocol to the secondary tile(s).
-5. Based on SOC integration, inter-chiplet could be an intelligent peripheral that can DMA or implement data payload registers for Caliptra to read.
-    1. Note that the indication from Caliptra for “next-image” follows the same recovery interface protocol.
-    2. Note that to load the remaining images of a secondary tile, SOC can choose to do recovery flow for rest of the remaining images. Depending on the SOC architecture and chiplets, MCU RT FW may coordinate the SOC to boot in such a way that it “broadcasts” the same image to multiple chiplets that require the same image. This is a SOC optimized flow outside of Caliptra or Subsystem Context.
-
-# Caliptra Subsystem I3C Recovery Interface
-
-The I3C recovery interface acts as a standalone I3C target device for recovery. It will have a unique address compared to any other I3C endpoint for the device. It will comply with I3C Basic v1.1.1 specification. It will support I3C read and write transfer operations. It must support Max read and write data transfer of 1-260B excluding the command code (1 Byte), length (2 Byte), and PEC (1 Byte), total 4 Byte I3C header. Therefore, max recovery data per transfer will be limited to 256-byte data.
-
-I3C recovery interface is responsible for the following list of actions:
-
-1. Responding to command sent by Recovery Agent (RA)
-2. Updating status registers based on interaction of AC-RoT and other devices
-3. Asserting / Deasserting “payload_available” & “image_activated” signals
-
-# OCP Recovery Interface Hardware Specifications
-
-[OCP Recovery Document](https://docs.google.com/document/d/1Ge_w9i5A6YKG-7nlTp--JhZf6By7I9oB3oW_2_i7JbE/edit?usp=sharing)
-
-[Flashless Boot using OCP, PCIe, and DMTF Standards](https://docs.google.com/document/d/1Ge_w9i5A6YKG-7nlTp--JhZf6By7I9oB3oW_2_i7JbE/edit?usp=sharing)
-
-# Caliptra Subsystem Recovery Interface Hardware
-
-Please refer to Caliptra subsystem Hardware specification.
-
-# Caliptra Subsystem Recovery Sequence
-
-1. **Initialization step:** Caliptra ROM initializes PROT_CAP, DEVICE_ID, DEVICE_STATUS, RECOVERY_STATUS, HW_STATUS, INDIRECT_FIFO_STATUS (remove these two reg from ROM initialization) default values. Note: Any I3C initialization is done b/w MCU ROM, I3C target HW and I3C initiator. This is not part of this document.
-2. MCU Specific SoC init of I3C & Recovery interface.
-    1. MCU ROM can set HW_STATUS register per recovery spec, at any time based on SOC specific conditions.
-    2. MCU ROM will program DEVICE_ID register value based on associated fuse values.
-    3. I3C device must update FIFO size (1-256 Byte), Max transfer size and type of region (tie this to 0x1) to INDIRECT_FIFO_STATUS register, which could be read by BMC firmware to understand the size of the FIFO & max transfer size.
-3. Caliptra ROM will update PROT_CAP register, bit 11 to set to ‘1 “Flashless boot (From RESET)”. Caliptra ROM will set other register bits based on other recovery capabilities. PROT_CAP will also indicate support for FIFO CMS for I3C device by updating byte 10-11, bit 12 with 0x1 “FIFO CMS Support”.
-4. To start recovery or boot, Caliptra ROM will write DEVICE_STATUS register to “RECOVERY_MODE” by writing byte 0, with data 0x3. Caliptra ROM will write DEVICE_STATUS register’s byte 2-3 to set the FSB parameter (0x12).
-5. I3C Recovery HW will set byte 1 based on the DEVICE_STATUS register based on the rules defined for this register. This register status will assist BMC operation.
-6. Caliptra ROM will write via DMA assist to RECOVERY_STATUS register with data of (byte 0, 0x1) and sets the recovery image index to 0x0
-7. BMC or a similar platform component will update INDIRECT_FIFO_CTRL with Component Memory Space (CMS) byte 0 with 0x0, Reset field byte 1 with 0x1 and Image size byte 2 to 5 field to size of the image.
-8. BMC or a similar platform component writes to INDIRECT_FIFO_DATA register. I3C device shall return a NACK response for any transfer that would cause the Head Pointer to advance to equal the Tail Pointer. BMC can implement flow control through NACK responses or by monitoring the FIFO space remaining via the Head and Tail Pointers.
-9. The I3C device will keep head and tail pointers along with FIFO status up to date into INDIRECT_FIFO_STATUS register. I3C recovery interface HW wait for an update to INDIRECT_DATA_REG with 1-256B data from BMC.
-10. If there is a write to INDIRECT_DATA_FIFO, I3C device will indicate data availability via side channel implemented as wire “payload_available” ( for more details read here) to Caliptra. Caliptra HW will latch this wire into the register for Caliptra firmware to read.
-11. Caliptra ROM arms DMA interface to read INDIRECT_FIFO_CTRL for the image size and programs DMA engine back to read the image data from INDIRECT_FIFO_DATA.
-12. Steps 9 through 11 repeat until all the images are pushed over I3C and it matches the image size initialized into the INDIRECT_FIFO_CTRL register.
-13. After the above steps, Caliptra ROM Firmware will wait for BMC to activate image indicated to Caliptra via side channel.
-14. If the Image is activated, update RECOVERY STATUS to “Booting recovery image” by writing byte0, with data 0x2. If the image is authenticated, then the Caliptra RT FW will update the image index in RECOVERY_STATUS register (0x1 in byte 0, bits 7:4) and then set then update the byte 0, bit 3:0 to “Awaiting for recovery image” (0x1)
-15. BMC or a similar platform component will send the next image as requested in the image index, and Caliptra RT FW and I3C HW go through the same flow as above.
-
-**BMC or a similar platform component requirements for recovery support**
-
-1. It should not send payload to recovery interface (/I3C target)  device if RECOVERY_CTRL register has byte 2 indicating Image Activated. BMC must wait to clear the byte 2. ( Recovery Interface is responsible for clearing this bye by writing 1).
-2. It must send payload to I3C target device in chunks of 256 bytes ( header (4B) + FW bytes(256B) as I3C target transfer ) only unless it is the last write for the image. Before sending the payload, it must read FIFO empty status from INDIRECT_FIFO_STATUS register.
-3. After last write for the image, it must activate the image after reading INDIRECT_FIFO_STATUS register, FIFO empty status.
-
-# Life Cycle Controller & SoC Debug Architecture
-
-Please refer to Caliptra subsystem hardware specification.
 
 # Terminology
 
@@ -1517,7 +1265,6 @@ The following acronyms and abbreviations are used throughout this document.
 | <a id="iRoT"></a>**iRoT**     | Internal Root of Trust                         |
 | <a id="KAT"></a>**KAT**       | Known Answer Test                              |
 | <a id="LMS"></a>**LMS**       | Leighton-Micali Hash-Based Signatures          |
-| <a id="MLDSA"></a>**MLDSA**   | Module-Lattice-Based Digital Signatures        |
 | <a id="LDevId"></a>**LDevId** | Locally Significant Device Identifier          |
 | <a id="NIC"></a>**NIC**       | Network Interface Card                         |
 | <a id="NIST"></a>**NIST**     | National Institute of Standards and Technology |
@@ -1538,8 +1285,6 @@ The following acronyms and abbreviations are used throughout this document.
 | <a id="TCG"></a>**TCG**       | Trusted Computing Group                        |
 | <a id="TEE"></a>**TEE**       | Trusted Execution Environment                  |
 | <a id="TRNG"></a>**TRNG**     | True Random Number Generator                   |
-| <a id="MCU"></a>**MCU**       | Manufacturer Control Unit                      |
-| <a id="MCI"></a>**MCI**       | Manufacturer Control Interface                 |
 
 # References
 
@@ -1569,6 +1314,7 @@ The Caliptra Workgroup acknowledges the following individuals for their contribu
 * Bryan Kelly (Microsoft)
 * Caleb Whitehead (Microsoft)
 * Howard Tran (Google)
+* Ishwar Agarwal (Microsoft)
 * James Zhang (NVIDIA)
 * Jeff Andersen (Google)
 * John Traver (AMD)
@@ -1607,6 +1353,6 @@ The Caliptra Workgroup acknowledges the following individuals for their contribu
 
 [^7]: The format of this blob is outside the scope of this specification.
 
-[^8]: ECDSA and MLDSA-87 is used for firmware verification and SPDM (signing).
+[^8]: ECDSA is used for firmware verification and SPDM (signing).
 
 [^9]: SHA is used with ECDSA and HMAC, and is also used to generate measurements.
